@@ -1,0 +1,40 @@
+# ══════════════════════════════════════════════════════════════
+# HEARTBEAT — Mantiene il database Supabase sempre attivo
+# Funziona così: ogni 5 giorni GitHub esegue automaticamente
+# questo file, che manda una piccola richiesta al database.
+# Supabase vede attività e non mette il progetto in pausa.
+# Non devi fare nulla: una volta caricato, lavora da solo.
+# ══════════════════════════════════════════════════════════════
+
+name: Heartbeat Supabase
+
+on:
+  schedule:
+    # Ogni 5 giorni alle 08:00 UTC (10:00 ora italiana)
+    # Formato: minuto ora giorno mese giorno_settimana
+    - cron: '0 8 */5 * *'
+  workflow_dispatch:
+    # Permette anche di avviarlo manualmente dalla dashboard GitHub
+    # utile per testare che funzioni
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping database Supabase
+        # Manda una richiesta HTTP al database.
+        # Legge il conteggio delle righe nella tabella spese.
+        # Se Supabase risponde (anche con 0 righe) il progetto resta attivo.
+        run: |
+          echo "Invio heartbeat a Supabase..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/spese?select=count" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "Risposta HTTP: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Database attivo e raggiungibile."
+          else
+            echo "⚠️ Risposta inattesa: $HTTP_STATUS"
+            exit 1
+          fi
