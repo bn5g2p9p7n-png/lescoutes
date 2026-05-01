@@ -9,20 +9,22 @@
   <title>Les Coutes — Gestione Spese</title>
 
   <!-- ══════════════════════════════════════════════════════
-       CONFIGURAZIONE SUPABASE
-       Sostituisci i due valori qui sotto con quelli del tuo progetto.
-       Li trovi su Supabase → Settings → API
+       CREDENZIALI SUPABASE — modifica questi due valori
   ═══════════════════════════════════════════════════════ -->
   <script>
     const SUPABASE_URL  = 'https://putjqiiqhstvgqxrclsw.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1dGpxaWlxaHN0dmdxeHJjbHN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjc5MjYsImV4cCI6MjA5Mjk0MzkyNn0.vQ6fFzJ731Zsd3cDUoRlNUdIqVulGqq0bC9WWdWRec4';
+    // Email del proprietario — determina il ruolo
+    const EMAIL_PROPRIETARIO = 'ulissebalma@gmail.com';
+    // Timeout sessione in millisecondi (20 minuti)
+    const TIMEOUT_MS = 20 * 60 * 1000;
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 
   <style>
-    /* ── Reset & Variabili ──────────────────────────────── */
+    /* ── Reset & Variabili ───────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -54,10 +56,10 @@
       overscroll-behavior: none;
     }
 
-    /* ── Layout principale ──────────────────────────────── */
+    /* ── Layout principale ───────────────────────────── */
     #app { display: flex; flex-direction: column; height: 100%; }
 
-    /* ── Header ─────────────────────────────────────────── */
+    /* ── Header ──────────────────────────────────────── */
     #header {
       padding: calc(var(--safe-top) + 16px) 20px 16px;
       background: var(--surface);
@@ -67,22 +69,19 @@
     }
     #header-title {
       font-family: 'DM Serif Display', serif;
-      font-size: 22px;
-      letter-spacing: -0.3px;
-      color: var(--ink);
+      font-size: 22px; letter-spacing: -0.3px; color: var(--ink);
     }
     #header-subtitle { font-size: 12px; color: var(--ink3); margin-top: 1px; }
-    #btn-logout {
-      background: none; border: 1px solid var(--border);
-      padding: 6px 14px; border-radius: 20px;
-      font-size: 13px; color: var(--ink2); cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+    #btn-profilo {
+      background: var(--accent2); border: none;
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 16px;
     }
 
-    /* ── Navigazione tab ────────────────────────────────── */
+    /* ── Navigazione tab ─────────────────────────────── */
     #nav {
-      display: flex;
-      background: var(--surface);
+      display: flex; background: var(--surface);
       border-top: 1px solid var(--border);
       padding-bottom: var(--safe-bot);
       position: sticky; bottom: 0; z-index: 100;
@@ -99,13 +98,12 @@
     .nav-btn.active { color: var(--accent); }
     .nav-btn svg { width: 22px; height: 22px; }
 
-    /* ── Contenuto scrollabile ──────────────────────────── */
+    /* ── Contenuto scrollabile ───────────────────────── */
     #main { flex: 1; overflow-y: auto; padding: 20px 16px; -webkit-overflow-scrolling: touch; }
 
-    /* ── Schermata Login ────────────────────────────────── */
+    /* ── Login ───────────────────────────────────────── */
     #screen-login {
-      min-height: 100vh;
-      display: flex; flex-direction: column;
+      min-height: 100vh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       padding: 40px 24px; background: var(--bg);
     }
@@ -127,15 +125,21 @@
     }
     .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
     .field label { font-size: 13px; color: var(--ink2); font-weight: 500; }
-    .field input {
+    .field input, .field select, .field textarea {
       padding: 13px 16px; border: 1.5px solid var(--border);
       border-radius: 10px; font-size: 16px;
       background: var(--card); color: var(--ink);
       font-family: 'DM Sans', sans-serif;
-      transition: border-color .2s;
-      outline: none;
+      transition: border-color .2s; outline: none; width: 100%;
     }
-    .field input:focus { border-color: var(--accent); }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .field select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6560' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .field textarea { resize: vertical; min-height: 80px; }
     #btn-login {
       width: 100%; padding: 14px;
       background: var(--accent); color: #fff;
@@ -153,7 +157,7 @@
       display: none;
     }
 
-    /* ── Componenti UI riutilizzabili ───────────────────── */
+    /* ── Componenti UI ───────────────────────────────── */
     .card {
       background: var(--surface); border-radius: var(--radius);
       border: 1px solid var(--border); padding: 20px;
@@ -161,8 +165,7 @@
     }
     .section-title {
       font-family: 'DM Serif Display', serif;
-      font-size: 20px; margin-bottom: 16px;
-      color: var(--ink);
+      font-size: 20px; margin-bottom: 16px; color: var(--ink);
     }
     .badge {
       display: inline-block; padding: 3px 10px;
@@ -174,19 +177,57 @@
     .badge-gold  { background: var(--gold2);   color: var(--gold);   }
     .badge-gray  { background: var(--border);  color: var(--ink2);   }
 
-    /* KPI Cards */
+    /* KPI */
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .kpi-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 16px;
-      box-shadow: var(--shadow);
+      border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
     }
     .kpi-card.full { grid-column: 1/-1; }
     .kpi-label { font-size: 11px; color: var(--ink3); text-transform: uppercase; letter-spacing: .6px; font-weight: 600; margin-bottom: 6px; }
-    .kpi-value { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--ink); }
-    .kpi-value.red { color: var(--danger); }
+    .kpi-value { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--ink); }
+    .kpi-value.red   { color: var(--danger); }
     .kpi-value.green { color: var(--accent); }
-    .kpi-value.gold { color: var(--gold); }
+
+    /* Saldo box */
+    .saldo-box {
+      border-radius: var(--radius); padding: 20px;
+      margin-bottom: 14px; text-align: center;
+      border: 1px solid var(--border);
+    }
+    .saldo-box.credito { background: var(--accent2); border-color: #b2d8bf; }
+    .saldo-box.debito  { background: var(--danger2); border-color: #f0b8b2; }
+    .saldo-box .label  { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; font-weight: 600; }
+    .saldo-box.credito .label { color: var(--accent); }
+    .saldo-box.debito  .label { color: var(--danger); }
+    .saldo-box .value  { font-family: 'DM Serif Display', serif; font-size: 36px; }
+    .saldo-box.credito .value { color: var(--accent); }
+    .saldo-box.debito  .value { color: var(--danger); }
+    .saldo-box .sub    { font-size: 12px; color: var(--ink3); margin-top: 4px; }
+
+    /* Griglia mesi dashboard */
+    .mesi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .mese-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      box-shadow: var(--shadow); cursor: pointer;
+      transition: border-color .2s, box-shadow .2s;
+      position: relative;
+    }
+    .mese-card:active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent2); }
+    .mese-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .mese-card-nome { font-weight: 600; font-size: 14px; color: var(--ink); }
+    .mese-card-allegati { font-size: 14px; }
+    .mese-card-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink2); margin-bottom: 3px; }
+    .mese-card-row span:last-child { font-weight: 500; font-variant-numeric: tabular-nums; }
+    .mese-card-saldo {
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 12px; font-weight: 600;
+      display: flex; justify-content: space-between;
+    }
+    .mese-card-saldo.ok   { color: var(--accent); }
+    .mese-card-saldo.nok  { color: var(--danger); }
 
     /* Navigazione mesi */
     .month-nav {
@@ -200,26 +241,13 @@
       width: 36px; height: 36px; border-radius: 50%;
       font-size: 18px; cursor: pointer; color: var(--ink2);
       display: flex; align-items: center; justify-content: center;
-      transition: background .15s;
     }
-    .month-nav button:hover { background: var(--bg); }
     .month-nav-label {
       font-family: 'DM Serif Display', serif;
       font-size: 18px; color: var(--ink); text-align: center;
     }
 
-    /* Barchart */
-    .chart-wrap { padding: 8px 0 0; }
-    .chart-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .chart-bar-label { font-size: 12px; color: var(--ink2); width: 64px; flex-shrink: 0; text-align: right; }
-    .chart-bar-outer { flex: 1; height: 22px; background: var(--bg); border-radius: 6px; overflow: hidden; position: relative; }
-    .chart-bar-inner { height: 100%; border-radius: 6px; transition: width .6s cubic-bezier(.4,0,.2,1); }
-    .chart-bar-val { font-size: 11px; color: var(--ink2); width: 68px; flex-shrink: 0; text-align: right; font-variant-numeric: tabular-nums; }
-    .chart-legend { display: flex; gap: 16px; margin-top: 12px; }
-    .chart-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .chart-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink2); }
-
-    /* Liste voci */
+    /* Liste */
     .list-item {
       display: flex; justify-content: space-between; align-items: flex-start;
       padding: 14px 0; border-bottom: 1px solid var(--border);
@@ -228,11 +256,51 @@
     .list-item-left { flex: 1; }
     .list-item-title { font-weight: 500; font-size: 15px; margin-bottom: 3px; }
     .list-item-sub { font-size: 12px; color: var(--ink3); }
-    .list-item-right { text-align: right; flex-shrink: 0; }
+    .list-item-right { text-align: right; flex-shrink: 0; padding-left: 12px; }
     .list-item-amount { font-family: 'DM Serif Display', serif; font-size: 17px; font-variant-numeric: tabular-nums; }
-    .list-item-amount.neg { color: var(--accent); }
+    .list-item-amount.pos { color: var(--accent); }
+    .list-item-amount.neg { color: var(--danger); }
 
-    /* Bottoni azione */
+    /* Chip categoria */
+    .chip {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 6px; font-size: 11px; font-weight: 500;
+    }
+    .chip-Affitto       { background: #E8F0FE; color: #1A56DB; }
+    .chip-Internet      { background: #E8F0FE; color: #1A56DB; }
+    .chip-Elettricità   { background: #FFF3CD; color: #856404; }
+    .chip-Riscaldamento { background: #FFE8D6; color: #C05621; }
+    .chip-Altro         { background: var(--border); color: var(--ink2); }
+
+    /* Allegato link */
+    .allegato-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--accent); text-decoration: none;
+      background: var(--accent2); padding: 4px 10px; border-radius: 6px;
+      margin-top: 4px;
+    }
+
+    /* Upload */
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 20px; text-align: center; cursor: pointer;
+      background: var(--card); position: relative;
+    }
+    .upload-area input[type=file] {
+      position: absolute; inset: 0; opacity: 0;
+      cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-area-text { font-size: 13px; color: var(--ink3); }
+    .upload-area-icon { font-size: 28px; margin-bottom: 6px; }
+    .upload-preview { margin-top: 10px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); display: none; }
+    .upload-preview img { width: 100%; max-height: 200px; object-fit: cover; display: block; }
+    .upload-preview-name {
+      padding: 8px 12px; font-size: 12px; color: var(--ink2);
+      background: var(--card); display: flex; align-items: center; justify-content: space-between;
+    }
+    .upload-remove { background: none; border: none; color: var(--danger); font-size: 13px; cursor: pointer; }
+
+    /* Bottoni */
     .btn-primary {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       width: 100%; padding: 14px; background: var(--accent); color: #fff;
@@ -241,12 +309,25 @@
       transition: opacity .2s; margin-top: 12px;
     }
     .btn-primary:disabled { opacity: .5; }
-    .btn-secondary {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 12px; background: var(--card); color: var(--ink);
-      border: 1.5px solid var(--border); border-radius: 10px;
-      font-size: 14px; font-weight: 500; cursor: pointer;
-      font-family: 'DM Sans', sans-serif; margin-top: 8px;
+    .btn-danger {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; padding: 14px; background: var(--danger2); color: var(--danger);
+      border: 1.5px solid #f0b8b2; border-radius: 10px; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 8px;
+    }
+
+    /* Confirm banner */
+    .confirm-banner {
+      background: var(--gold2); border: 1px solid #E8D5A0;
+      border-radius: var(--radius); padding: 14px 16px;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+    }
+    .confirm-banner-text { flex: 1; font-size: 13px; color: var(--gold); font-weight: 500; }
+    .confirm-banner button {
+      background: var(--gold); color: #fff; border: none;
+      padding: 8px 14px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; flex-shrink: 0;
     }
 
     /* Modal / bottom sheet */
@@ -266,29 +347,38 @@
     @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
     .sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
     .sheet h3 { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 20px; }
-
-    /* Form campi nel modal */
-    .sheet .field input,
-    .sheet .field select,
-    .sheet .field textarea {
-      padding: 13px 16px; border: 1.5px solid var(--border);
-      border-radius: 10px; font-size: 16px;
-      background: var(--card); color: var(--ink);
-      font-family: 'DM Sans', sans-serif; width: 100%;
-      outline: none; transition: border-color .2s;
-    }
-    .sheet .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6560' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-    .sheet .field input:focus,
-    .sheet .field select:focus { border-color: var(--accent); }
-    .sheet .field textarea { resize: vertical; min-height: 80px; }
     .sheet-actions { display: flex; gap: 10px; margin-top: 16px; }
     .sheet-actions .btn-primary { margin-top: 0; flex: 1; }
     .sheet-actions .btn-cancel {
       flex: 1; padding: 14px; background: var(--bg);
       border: 1.5px solid var(--border); border-radius: 10px;
-      font-size: 15px; cursor: pointer; font-family: 'DM Sans', sans-serif;
-      color: var(--ink2);
+      font-size: 15px; cursor: pointer; font-family: 'DM Sans', sans-serif; color: var(--ink2);
     }
+
+    /* Modal dettaglio mese */
+    .overlay-full {
+      position: fixed; inset: 0; background: var(--bg);
+      z-index: 300; display: none; flex-direction: column;
+      overflow-y: auto;
+    }
+    .overlay-full.open { display: flex; }
+    .overlay-full-header {
+      padding: calc(var(--safe-top) + 16px) 20px 16px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .btn-back {
+      background: none; border: 1px solid var(--border);
+      width: 36px; height: 36px; border-radius: 50%;
+      font-size: 18px; cursor: pointer; color: var(--ink2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .overlay-full-title {
+      font-family: 'DM Serif Display', serif; font-size: 20px;
+    }
+    .overlay-full-body { padding: 20px 16px; }
 
     /* Toast */
     #toast {
@@ -302,7 +392,7 @@
     }
     #toast.show { opacity: 1; }
 
-    /* Loader */
+    /* Spinner */
     .spinner {
       width: 36px; height: 36px; border: 3px solid var(--border);
       border-top-color: var(--accent); border-radius: 50%;
@@ -310,55 +400,69 @@
     }
     @keyframes spin { to { transform: rotate(360deg) } }
 
-    /* Empty state */
+    /* Empty */
     .empty { text-align: center; padding: 48px 20px; color: var(--ink3); }
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
     .empty p { font-size: 14px; }
 
-    /* Conferma spese fisse */
-    .confirm-banner {
-      background: var(--gold2); border: 1px solid #E8D5A0;
-      border-radius: var(--radius); padding: 14px 16px;
-      margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+    /* Totale row */
+    .totale-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 14px; border-top: 1px solid var(--border); margin-top: 2px;
     }
-    .confirm-banner-text { flex: 1; font-size: 13px; color: var(--gold); font-weight: 500; }
-    .confirm-banner button {
-      background: var(--gold); color: #fff; border: none;
-      padding: 8px 14px; border-radius: 8px;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      font-family: 'DM Sans', sans-serif; flex-shrink: 0;
-    }
-
-    /* Chip categoria */
-    .chip {
-      display: inline-block; padding: 2px 8px;
-      border-radius: 6px; font-size: 11px; font-weight: 500;
-    }
-    .chip-Affitto      { background: #E8F0FE; color: #1A56DB; }
-    .chip-Internet     { background: #E8F0FE; color: #1A56DB; }
-    .chip-Elettricità  { background: #FFF3CD; color: #856404; }
-    .chip-Riscaldamento{ background: #FFE8D6; color: #C05621; }
+    .totale-row span:first-child { font-weight: 600; color: var(--ink2); }
+    .totale-row span:last-child { font-family: 'DM Serif Display', serif; font-size: 18px; }
 
     /* Schermate */
     .screen { display: none; }
     .screen.active { display: block; }
 
-    /* Sezione riepilogo saldo */
-    .saldo-box {
-      background: var(--accent); color: #fff;
-      border-radius: var(--radius); padding: 20px;
-      margin-bottom: 14px; text-align: center;
+    /* Profilo */
+    .profilo-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--accent2); display: flex; align-items: center;
+      justify-content: center; font-size: 32px; margin: 0 auto 16px;
     }
-    .saldo-box .label { font-size: 12px; opacity: .75; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
-    .saldo-box .value { font-family: 'DM Serif Display', serif; font-size: 38px; }
-    .saldo-box.positive { background: var(--danger); }
+    .profilo-email { text-align: center; font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+    .profilo-ruolo { text-align: center; font-size: 13px; color: var(--ink3); margin-bottom: 24px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    /* Timeout banner */
+    #timeout-warning {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(26,24,20,.85); z-index: 1000;
+      display: none; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    #timeout-warning.show { display: flex; }
+    .timeout-card {
+      background: var(--surface); border-radius: 20px;
+      padding: 32px 28px; max-width: 340px; width: 100%;
+      text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,.3);
+    }
+    .timeout-card h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px; margin-bottom: 8px;
+    }
+    .timeout-card p { font-size: 14px; color: var(--ink2); margin-bottom: 24px; }
   </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════════
-     SCHERMATA LOGIN
-═══════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════
+     TIMEOUT WARNING
+═══════════════════════════════════════════════════ -->
+<div id="timeout-warning">
+  <div class="timeout-card">
+    <h3>Sessione scaduta</h3>
+    <p>Per sicurezza, la sessione è stata chiusa dopo 20 minuti di inattività.</p>
+    <button class="btn-primary" style="margin-top:0;" onclick="eseguiLogout()">Accedi di nuovo</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     LOGIN
+═══════════════════════════════════════════════════ -->
 <div id="screen-login">
   <div class="login-logo">Les Coutes</div>
   <div class="login-sub">Gestione Spese Appartamento</div>
@@ -377,33 +481,27 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════
-     APP PRINCIPALE (nascosta fino al login)
-═══════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════
+     APP PRINCIPALE
+═══════════════════════════════════════════════════ -->
 <div id="app" style="display:none;">
-  <!-- Header -->
+
   <div id="header">
     <div>
       <div id="header-title">Les Coutes</div>
       <div id="header-subtitle"></div>
     </div>
-    <button id="btn-logout">Esci</button>
+    <button id="btn-profilo" title="Profilo">👤</button>
   </div>
 
-  <!-- Contenuto principale -->
   <div id="main">
 
-    <!-- ── DASHBOARD ── -->
+    <!-- DASHBOARD -->
     <div id="screen-dashboard" class="screen active">
-      <div class="month-nav">
-        <button id="dash-prev">&#8592;</button>
-        <div class="month-nav-label" id="dash-month-label">—</div>
-        <button id="dash-next">&#8594;</button>
-      </div>
       <div id="dash-content"><div class="spinner"></div></div>
     </div>
 
-    <!-- ── SPESE ── -->
+    <!-- SPESE -->
     <div id="screen-spese" class="screen">
       <div class="month-nav">
         <button id="spese-prev">&#8592;</button>
@@ -414,7 +512,7 @@
       <div id="spese-actions"></div>
     </div>
 
-    <!-- ── PAGAMENTI ── -->
+    <!-- PAGAMENTI -->
     <div id="screen-pagamenti" class="screen">
       <div class="month-nav">
         <button id="pag-prev">&#8592;</button>
@@ -425,15 +523,19 @@
       <div id="pag-actions"></div>
     </div>
 
-    <!-- ── GAS ── -->
+    <!-- GAS -->
     <div id="screen-gas" class="screen">
       <div id="gas-content"><div class="spinner"></div></div>
       <div id="gas-actions"></div>
     </div>
 
-  </div><!-- /main -->
+    <!-- PROFILO -->
+    <div id="screen-profilo" class="screen">
+      <div id="profilo-content"></div>
+    </div>
 
-  <!-- Navigazione inferiore -->
+  </div>
+
   <nav id="nav">
     <button class="nav-btn active" data-screen="dashboard">
       <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -452,11 +554,24 @@
       Gas
     </button>
   </nav>
-</div><!-- /app -->
+</div>
 
-<!-- ════════════════════════════════════════════════════
-     MODAL — Aggiungi Spesa (solo proprietario)
-═══════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════
+     DETTAGLIO MESE (overlay fullscreen)
+═══════════════════════════════════════════════════ -->
+<div class="overlay-full" id="overlay-mese">
+  <div class="overlay-full-header">
+    <button class="btn-back" onclick="closeOverlayMese()">&#8592;</button>
+    <div class="overlay-full-title" id="overlay-mese-title">—</div>
+  </div>
+  <div class="overlay-full-body" id="overlay-mese-body">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MODAL — Aggiungi Spesa
+═══════════════════════════════════════════════════ -->
 <div class="overlay" id="modal-spesa">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -472,6 +587,7 @@
         <option>Internet</option>
         <option>Elettricità</option>
         <option>Riscaldamento</option>
+        <option>Altro</option>
       </select>
     </div>
     <div class="field">
@@ -486,6 +602,21 @@
       <label>Note (opzionale)</label>
       <textarea id="f-spesa-note" placeholder="Note aggiuntive…"></textarea>
     </div>
+    <div class="field">
+      <label>Allega bolletta (opzionale)</label>
+      <div class="upload-area">
+        <input type="file" id="f-spesa-file" accept="image/*,application/pdf" />
+        <div class="upload-area-icon">📎</div>
+        <div class="upload-area-text">Tocca per allegare foto o PDF</div>
+      </div>
+      <div class="upload-preview" id="preview-spesa">
+        <img id="preview-spesa-img" src="" alt="" />
+        <div class="upload-preview-name">
+          <span id="preview-spesa-name"></span>
+          <button class="upload-remove" onclick="rimuoviFile('spesa')">Rimuovi</button>
+        </div>
+      </div>
+    </div>
     <div class="sheet-actions">
       <button class="btn-cancel" onclick="closeModal('modal-spesa')">Annulla</button>
       <button class="btn-primary" id="btn-save-spesa">Salva</button>
@@ -493,9 +624,9 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════
-     MODAL — Registra Pagamento (solo inquilino)
-═══════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════
+     MODAL — Registra Pagamento
+═══════════════════════════════════════════════════ -->
 <div class="overlay" id="modal-pagamento">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -516,6 +647,21 @@
       <label>Note (opzionale)</label>
       <textarea id="f-pag-note" placeholder="es. Bonifico del 28 aprile…"></textarea>
     </div>
+    <div class="field">
+      <label>Allega screenshot bonifico (opzionale)</label>
+      <div class="upload-area">
+        <input type="file" id="f-pag-file" accept="image/*,application/pdf" />
+        <div class="upload-area-icon">📎</div>
+        <div class="upload-area-text">Tocca per allegare foto o PDF</div>
+      </div>
+      <div class="upload-preview" id="preview-pag">
+        <img id="preview-pag-img" src="" alt="" />
+        <div class="upload-preview-name">
+          <span id="preview-pag-name"></span>
+          <button class="upload-remove" onclick="rimuoviFile('pag')">Rimuovi</button>
+        </div>
+      </div>
+    </div>
     <div class="sheet-actions">
       <button class="btn-cancel" onclick="closeModal('modal-pagamento')">Annulla</button>
       <button class="btn-primary" id="btn-save-pag">Salva</button>
@@ -523,9 +669,9 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════
-     MODAL — Inserisci Lettura Gas (solo proprietario)
-═══════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════
+     MODAL — Inserisci Lettura Gas
+═══════════════════════════════════════════════════ -->
 <div class="overlay" id="modal-gas">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -553,54 +699,98 @@
   </div>
 </div>
 
-<!-- Toast notifiche -->
+<!-- ════════════════════════════════════════════════
+     MODAL — Cambio Password
+═══════════════════════════════════════════════════ -->
+<div class="overlay" id="modal-password">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>Cambia Password</h3>
+    <div class="field">
+      <label>Nuova password</label>
+      <input type="password" id="f-pwd-new" placeholder="Minimo 8 caratteri" />
+    </div>
+    <div class="field">
+      <label>Conferma password</label>
+      <input type="password" id="f-pwd-confirm" placeholder="Ripeti la nuova password" />
+    </div>
+    <div id="pwd-error" style="display:none;color:var(--danger);font-size:13px;margin-top:-8px;margin-bottom:8px;"></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-password')">Annulla</button>
+      <button class="btn-primary" id="btn-save-pwd">Salva</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
-<!-- ════════════════════════════════════════════════════
+<!-- ════════════════════════════════════════════════
      SUPABASE SDK
-═══════════════════════════════════════════════════════ -->
+═══════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-/* ══════════════════════════════════════════════════════
-   INIZIALIZZAZIONE SUPABASE
-══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   INIT SUPABASE
+══════════════════════════════════════════════════ */
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    STATO GLOBALE
-══════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════ */
 let currentUser = null;
 let userRole    = null; // 'proprietario' | 'inquilino'
 
-// Email proprietario — MODIFICA con la email reale del proprietario
-const EMAIL_PROPRIETARIO = 'ulissebalma@gmail.com';
-
-// Mesi correnti per ogni sezione
 const today = new Date();
 const state = {
-  dashMese:  `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`,
   speseMese: `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`,
   pagMese:   `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`,
 };
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
+   TIMEOUT SESSIONE — 20 minuti
+══════════════════════════════════════════════════ */
+let timeoutHandle = null;
+
+// Resetta il timer ogni volta che l'utente interagisce
+function resetTimeout() {
+  clearTimeout(timeoutHandle);
+  timeoutHandle = setTimeout(() => {
+    // Mostra il warning di sessione scaduta
+    document.getElementById('timeout-warning').classList.add('show');
+  }, TIMEOUT_MS);
+}
+
+// Avvia il monitoraggio dell'inattività
+function avviaTimeout() {
+  ['touchstart', 'click', 'keydown', 'scroll'].forEach(ev => {
+    document.addEventListener(ev, resetTimeout, { passive: true });
+  });
+  resetTimeout();
+}
+
+// Ferma il monitoraggio
+function fermaTimeout() {
+  clearTimeout(timeoutHandle);
+  ['touchstart', 'click', 'keydown', 'scroll'].forEach(ev => {
+    document.removeEventListener(ev, resetTimeout);
+  });
+}
+
+/* ══════════════════════════════════════════════════
    UTILITY
-══════════════════════════════════════════════════════ */
-// Formatta un importo in euro
+══════════════════════════════════════════════════ */
 function eur(n) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n || 0);
 }
 
-// Formatta una data ISO in GG/MM/AAAA
 function fmtData(isoStr) {
   if (!isoStr) return '—';
   const [y, m, d] = isoStr.split('-');
   return `${d}/${m}/${y}`;
 }
 
-// Converte AAAA-MM nel nome leggibile del mese
 function fmtMese(meseStr) {
   const [y, m] = meseStr.split('-');
   const nomi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
@@ -608,14 +798,18 @@ function fmtMese(meseStr) {
   return `${nomi[parseInt(m)-1]} ${y}`;
 }
 
-// Sposta il mese avanti (+1) o indietro (-1)
+function fmtMeseBreve(meseStr) {
+  const [y, m] = meseStr.split('-');
+  const nomi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  return `${nomi[parseInt(m)-1]} ${y.slice(2)}`;
+}
+
 function spostaM(meseStr, delta) {
   const [y, m] = meseStr.split('-').map(Number);
   const d = new Date(y, m - 1 + delta, 1);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
 
-// Mostra un toast temporaneo
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -623,24 +817,27 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-// Apre/chiude modal
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// Chiude il modal cliccando sull'overlay
 document.querySelectorAll('.overlay').forEach(el => {
-  el.addEventListener('click', e => {
-    if (e.target === el) el.classList.remove('open');
-  });
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    AUTENTICAZIONE
-══════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════ */
+async function eseguiLogout() {
+  document.getElementById('timeout-warning').classList.remove('show');
+  fermaTimeout();
+  await db.auth.signOut();
+}
+
+// Login con Enter
+document.getElementById('password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-login').click();
+});
+
 document.getElementById('btn-login').addEventListener('click', async () => {
   const email = document.getElementById('email').value.trim();
   const pwd   = document.getElementById('password').value;
@@ -659,14 +856,8 @@ document.getElementById('btn-login').addEventListener('click', async () => {
     btn.disabled = false;
     btn.textContent = 'Entra';
   }
-  // Il listener onAuthStateChange gestirà il resto
 });
 
-document.getElementById('btn-logout').addEventListener('click', async () => {
-  await db.auth.signOut();
-});
-
-// Ascolta i cambiamenti di stato autenticazione
 db.auth.onAuthStateChange((event, session) => {
   if (session) {
     currentUser = session.user;
@@ -675,18 +866,23 @@ db.auth.onAuthStateChange((event, session) => {
     document.getElementById('app').style.display = 'flex';
     document.getElementById('header-subtitle').textContent =
       userRole === 'proprietario' ? 'Proprietario' : 'Inquilino';
+    avviaTimeout();
     initApp();
   } else {
     currentUser = null;
     userRole = null;
+    fermaTimeout();
     document.getElementById('screen-login').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
+    // Pulisci i campi di login
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
   }
 });
 
-/* ══════════════════════════════════════════════════════
-   NAVIGAZIONE TRA SCHERMATE
-══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   NAVIGAZIONE
+══════════════════════════════════════════════════ */
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.screen;
@@ -694,158 +890,211 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`screen-${target}`).classList.add('active');
-    // Ricarica la sezione selezionata
     if (target === 'dashboard') renderDashboard();
     if (target === 'spese')     renderSpese();
     if (target === 'pagamenti') renderPagamenti();
     if (target === 'gas')       renderGas();
+    if (target === 'profilo')   renderProfilo();
   });
 });
 
-/* ══════════════════════════════════════════════════════
+document.getElementById('btn-profilo').addEventListener('click', () => {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-profilo').classList.add('active');
+  renderProfilo();
+});
+
+/* ══════════════════════════════════════════════════
    INIT APP
-══════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════ */
 function initApp() {
-  // Navigazione mesi — Dashboard
-  document.getElementById('dash-prev').onclick = () => {
-    state.dashMese = spostaM(state.dashMese, -1); renderDashboard();
-  };
-  document.getElementById('dash-next').onclick = () => {
-    state.dashMese = spostaM(state.dashMese, +1); renderDashboard();
-  };
-
-  // Navigazione mesi — Spese
-  document.getElementById('spese-prev').onclick = () => {
-    state.speseMese = spostaM(state.speseMese, -1); renderSpese();
-  };
-  document.getElementById('spese-next').onclick = () => {
-    state.speseMese = spostaM(state.speseMese, +1); renderSpese();
-  };
-
-  // Navigazione mesi — Pagamenti
-  document.getElementById('pag-prev').onclick = () => {
-    state.pagMese = spostaM(state.pagMese, -1); renderPagamenti();
-  };
-  document.getElementById('pag-next').onclick = () => {
-    state.pagMese = spostaM(state.pagMese, +1); renderPagamenti();
-  };
-
-  // Salvataggio spesa
-  document.getElementById('btn-save-spesa').onclick = salvaSpesa;
-
-  // Salvataggio pagamento
-  document.getElementById('btn-save-pag').onclick = salvaPagamento;
-
-  // Salvataggio lettura gas
-  document.getElementById('btn-save-gas').onclick = salvaGas;
+  // Spese
+  document.getElementById('spese-prev').onclick = () => { state.speseMese = spostaM(state.speseMese, -1); renderSpese(); };
+  document.getElementById('spese-next').onclick = () => { state.speseMese = spostaM(state.speseMese, +1); renderSpese(); };
+  // Pagamenti
+  document.getElementById('pag-prev').onclick = () => { state.pagMese = spostaM(state.pagMese, -1); renderPagamenti(); };
+  document.getElementById('pag-next').onclick = () => { state.pagMese = spostaM(state.pagMese, +1); renderPagamenti(); };
+  // Salvataggi
+  document.getElementById('btn-save-spesa').onclick  = salvaSpesa;
+  document.getElementById('btn-save-pag').onclick    = salvaPagamento;
+  document.getElementById('btn-save-gas').onclick    = salvaGas;
+  document.getElementById('btn-save-pwd').onclick    = salvaPassword;
+  // Anteprime upload
+  setupUploadPreview('f-spesa-file', 'preview-spesa', 'preview-spesa-img', 'preview-spesa-name');
+  setupUploadPreview('f-pag-file',   'preview-pag',   'preview-pag-img',   'preview-pag-name');
 
   renderDashboard();
 }
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    DASHBOARD
-══════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════ */
 async function renderDashboard() {
-  document.getElementById('dash-month-label').textContent = fmtMese(state.dashMese);
   const el = document.getElementById('dash-content');
   el.innerHTML = '<div class="spinner"></div>';
 
-  // Carica spese e pagamenti del mese corrente
+  // KPI globali: tutte le spese e tutti i pagamenti storici
+  const [{ data: tutteSpese }, { data: tuttiPagamenti }] = await Promise.all([
+    db.from('spese').select('importo'),
+    db.from('pagamenti').select('importo_pagato'),
+  ]);
+
+  const totSpeseGlobale = (tutteSpese||[]).reduce((s,r) => s + Number(r.importo), 0);
+  const totPagGlobale   = (tuttiPagamenti||[]).reduce((s,r) => s + Number(r.importo_pagato), 0);
+  const residuoGlobale  = totSpeseGlobale - totPagGlobale;
+  // residuo > 0 → inquilino deve ancora pagare (debito) → ROSSO
+  // residuo < 0 → inquilino ha pagato più del dovuto (credito) → VERDE
+  const isDebito = residuoGlobale > 0;
+
+  // Ultimi 6 mesi
+  const mesi6 = [];
+  const meseCorrente = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+  for (let i = 5; i >= 0; i--) mesi6.push(spostaM(meseCorrente, -i));
+
+  const [{ data: spese6 }, { data: pag6 }] = await Promise.all([
+    db.from('spese').select('mese,importo,allegato_url').in('mese', mesi6),
+    db.from('pagamenti').select('mese_riferimento,importo_pagato,allegato_url').in('mese_riferimento', mesi6),
+  ]);
+
+  // Costruisce i dati per ogni mese
+  const datiMesi = mesi6.map(m => {
+    const speseMese = (spese6||[]).filter(r => r.mese === m);
+    const pagMese   = (pag6||[]).filter(r => r.mese_riferimento === m);
+    const totSpese  = speseMese.reduce((a,r) => a + Number(r.importo), 0);
+    const totPag    = pagMese.reduce((a,r) => a + Number(r.importo_pagato), 0);
+    const hasAllegati = speseMese.some(r => r.allegato_url) || pagMese.some(r => r.allegato_url);
+    return { mese: m, totSpese, totPag, saldo: totSpese - totPag, hasAllegati };
+  });
+
+  // Segno e testo del residuo
+  const segno = isDebito ? '−' : '+';
+  const classeSaldo = isDebito ? 'debito' : 'credito';
+  const labelSaldo  = isDebito ? 'Residuo da pagare' : 'In anticipo';
+
+  let html = `
+    <!-- KPI globali -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Spese totali</div>
+        <div class="kpi-value">${eur(totSpeseGlobale)}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pagato totale</div>
+        <div class="kpi-value">${eur(totPagGlobale)}</div>
+      </div>
+    </div>
+
+    <div class="saldo-box ${classeSaldo}">
+      <div class="label">${labelSaldo}</div>
+      <div class="value">${segno}${eur(Math.abs(residuoGlobale))}</div>
+      <div class="sub">Dall'inizio del tracciamento</div>
+    </div>
+
+    <!-- Griglia ultimi 6 mesi -->
+    <div style="font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:12px;color:var(--ink);">Ultimi 6 mesi</div>
+    <div class="mesi-grid">
+      ${datiMesi.map(d => {
+        const saldoMese = d.saldo;
+        const classeMese = saldoMese > 0 ? 'nok' : 'ok';
+        const saldoLabel = saldoMese > 0 ? `−${eur(saldoMese)}` : saldoMese < 0 ? `+${eur(Math.abs(saldoMese))}` : 'In pari';
+        return `
+          <div class="mese-card" onclick="apriDettaglioMese('${d.mese}')">
+            <div class="mese-card-header">
+              <div class="mese-card-nome">${fmtMeseBreve(d.mese)}</div>
+              <div class="mese-card-allegati">${d.hasAllegati ? '📎' : ''}</div>
+            </div>
+            <div class="mese-card-row"><span>Spese</span><span>${eur(d.totSpese)}</span></div>
+            <div class="mese-card-row"><span>Pagato</span><span>${eur(d.totPag)}</span></div>
+            <div class="mese-card-saldo ${classeMese}">
+              <span>Saldo</span><span>${saldoLabel}</span>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+
+  el.innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════
+   DETTAGLIO MESE (overlay fullscreen)
+══════════════════════════════════════════════════ */
+async function apriDettaglioMese(mese) {
+  document.getElementById('overlay-mese-title').textContent = fmtMese(mese);
+  document.getElementById('overlay-mese-body').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('overlay-mese').classList.add('open');
+
   const [{ data: spese }, { data: pagamenti }] = await Promise.all([
-    db.from('spese').select('*').eq('mese', state.dashMese),
-    db.from('pagamenti').select('*').eq('mese_riferimento', state.dashMese),
+    db.from('spese').select('*').eq('mese', mese).order('data_inserimento'),
+    db.from('pagamenti').select('*').eq('mese_riferimento', mese).order('data_pagamento'),
   ]);
 
   const totSpese = (spese||[]).reduce((s,r) => s + Number(r.importo), 0);
   const totPag   = (pagamenti||[]).reduce((s,r) => s + Number(r.importo_pagato), 0);
   const saldo    = totSpese - totPag;
 
-  // Carica ultimi 6 mesi per il grafico
-  const mesi6 = [];
-  for (let i = 5; i >= 0; i--) mesi6.push(spostaM(state.dashMese, -i));
+  let html = '';
 
-  const [{ data: spese6 }, { data: pag6 }] = await Promise.all([
-    db.from('spese').select('mese,importo').in('mese', mesi6),
-    db.from('pagamenti').select('mese_riferimento,importo_pagato').in('mese_riferimento', mesi6),
-  ]);
+  // Spese
+  html += `<div class="card">
+    <div class="section-title" style="font-size:16px;">Spese</div>`;
+  if (!spese || spese.length === 0) {
+    html += `<p style="font-size:13px;color:var(--ink3);">Nessuna spesa registrata.</p>`;
+  } else {
+    html += spese.map(r => `
+      <div class="list-item">
+        <div class="list-item-left">
+          <div class="list-item-title"><span class="chip chip-${r.categoria}">${r.categoria}</span></div>
+          <div class="list-item-sub" style="margin-top:4px;">${r.descrizione||''}${r.note?` · ${r.note}`:''}</div>
+          ${r.allegato_url ? `<a href="${r.allegato_url}" target="_blank" class="allegato-link">📎 Vedi allegato</a>` : ''}
+        </div>
+        <div class="list-item-right">
+          <div class="list-item-amount">${eur(r.importo)}</div>
+        </div>
+      </div>`).join('');
+    html += `<div class="totale-row"><span>Totale spese</span><span>${eur(totSpese)}</span></div>`;
+  }
+  html += `</div>`;
 
-  const chartData = mesi6.map(m => {
-    const s = (spese6||[]).filter(r => r.mese === m).reduce((a,r) => a + Number(r.importo), 0);
-    const p = (pag6||[]).filter(r => r.mese_riferimento === m).reduce((a,r) => a + Number(r.importo_pagato), 0);
-    return { mese: m, spese: s, pag: p };
-  });
-  const maxVal = Math.max(...chartData.map(d => Math.max(d.spese, d.pag)), 1);
+  // Pagamenti
+  html += `<div class="card">
+    <div class="section-title" style="font-size:16px;">Pagamenti</div>`;
+  if (!pagamenti || pagamenti.length === 0) {
+    html += `<p style="font-size:13px;color:var(--ink3);">Nessun pagamento registrato.</p>`;
+  } else {
+    html += pagamenti.map(r => `
+      <div class="list-item">
+        <div class="list-item-left">
+          <div class="list-item-title">Pagamento del ${fmtData(r.data_pagamento)}</div>
+          ${r.note ? `<div class="list-item-sub">${r.note}</div>` : ''}
+          ${r.allegato_url ? `<a href="${r.allegato_url}" target="_blank" class="allegato-link">📎 Vedi bonifico</a>` : ''}
+        </div>
+        <div class="list-item-right">
+          <div class="list-item-amount pos">${eur(r.importo_pagato)}</div>
+        </div>
+      </div>`).join('');
+    html += `<div class="totale-row"><span>Totale pagato</span><span>${eur(totPag)}</span></div>`;
+  }
+  html += `</div>`;
 
-  // Spese non confermate del mese (solo per proprietario)
-  const daConfermare = (spese||[]).filter(r => r.tipo === 'fissa' && !r.confermata);
+  // Saldo mese
+  const isMeseDebito = saldo > 0;
+  html += `<div class="saldo-box ${isMeseDebito ? 'debito' : 'credito'}">
+    <div class="label">${isMeseDebito ? 'Residuo mese' : 'Saldo mese'}</div>
+    <div class="value">${isMeseDebito ? '−' : '+'}${eur(Math.abs(saldo))}</div>
+  </div>`;
 
-  el.innerHTML = `
-    ${userRole === 'proprietario' && daConfermare.length > 0 ? `
-      <div class="confirm-banner">
-        <span class="confirm-banner-text">⚠️ ${daConfermare.length} spesa${daConfermare.length>1?'e':''} fissa da confermare</span>
-        <button onclick="navigaSpese()">Vedi</button>
-      </div>
-    ` : ''}
-
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Spese</div>
-        <div class="kpi-value">${eur(totSpese)}</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Pagato</div>
-        <div class="kpi-value green">${eur(totPag)}</div>
-      </div>
-    </div>
-
-    <div class="saldo-box ${saldo > 0 ? 'positive' : ''}">
-      <div class="label">${saldo > 0 ? 'Debito residuo' : 'In pari'}</div>
-      <div class="value">${eur(Math.abs(saldo))}</div>
-    </div>
-
-    <div class="card">
-      <div class="section-title" style="font-size:16px;margin-bottom:14px;">Ultimi 6 mesi</div>
-      <div class="chart-wrap">
-        ${chartData.map(d => {
-          const [,mm] = d.mese.split('-');
-          const nomi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-          const label = nomi[parseInt(mm)-1];
-          const ws = Math.round((d.spese / maxVal) * 100);
-          const wp = Math.round((d.pag   / maxVal) * 100);
-          return `
-            <div class="chart-bar-row">
-              <div class="chart-bar-label">${label}</div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
-                <div class="chart-bar-outer"><div class="chart-bar-inner" style="width:${ws}%;background:#C05621;"></div></div>
-                <div class="chart-bar-outer"><div class="chart-bar-inner" style="width:${wp}%;background:#2C5F3E;"></div></div>
-              </div>
-              <div class="chart-bar-val" style="font-size:10px;">
-                <div style="color:#C05621;">${eur(d.spese)}</div>
-                <div style="color:#2C5F3E;">${eur(d.pag)}</div>
-              </div>
-            </div>`;
-        }).join('')}
-      </div>
-      <div class="chart-legend">
-        <div class="chart-legend-item"><div class="chart-dot" style="background:#C05621;"></div> Spese</div>
-        <div class="chart-legend-item"><div class="chart-dot" style="background:#2C5F3E;"></div> Pagamenti</div>
-      </div>
-    </div>
-  `;
+  document.getElementById('overlay-mese-body').innerHTML = html;
 }
 
-function navigaSpese() {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelector('[data-screen="spese"]').classList.add('active');
-  document.getElementById('screen-spese').classList.add('active');
-  state.speseMese = state.dashMese;
-  renderSpese();
+function closeOverlayMese() {
+  document.getElementById('overlay-mese').classList.remove('open');
 }
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    SPESE
-══════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════ */
 async function renderSpese() {
   document.getElementById('spese-month-label').textContent = fmtMese(state.speseMese);
   const el = document.getElementById('spese-content');
@@ -856,7 +1105,7 @@ async function renderSpese() {
     .eq('mese', state.speseMese)
     .order('data_inserimento', { ascending: true });
 
-  if (error) { el.innerHTML = '<p style="color:red;text-align:center;">Errore caricamento dati.</p>'; return; }
+  if (error) { el.innerHTML = '<p style="color:red;text-align:center;">Errore caricamento.</p>'; return; }
 
   const totale = (spese||[]).reduce((s,r) => s + Number(r.importo), 0);
   const daConf = (spese||[]).filter(r => r.tipo === 'fissa' && !r.confermata);
@@ -865,7 +1114,7 @@ async function renderSpese() {
 
   if (userRole === 'proprietario' && daConf.length > 0) {
     html += `<div class="confirm-banner">
-      <span class="confirm-banner-text">${daConf.length} spesa${daConf.length>1?'e':''} fissa da confermare</span>
+      <span class="confirm-banner-text">⚠️ ${daConf.length} spesa${daConf.length>1?'e':''} fissa da confermare</span>
     </div>`;
   }
 
@@ -880,8 +1129,9 @@ async function renderSpese() {
             <span class="chip chip-${r.categoria}">${r.categoria}</span>
           </div>
           <div class="list-item-sub" style="margin-top:4px;">
-            ${r.descrizione || ''}${r.note ? ` · ${r.note}` : ''}
+            ${r.descrizione||''}${r.note?` · ${r.note}`:''}
           </div>
+          ${r.allegato_url ? `<a href="${r.allegato_url}" target="_blank" class="allegato-link">📎 Vedi allegato</a>` : ''}
           ${r.tipo === 'fissa' ? `<div style="margin-top:4px;">
             <span class="badge ${r.confermata ? 'badge-green' : 'badge-gold'}">
               ${r.confermata ? 'Confermata' : 'Da confermare'}
@@ -889,37 +1139,32 @@ async function renderSpese() {
           </div>` : ''}
         </div>
         <div class="list-item-right">
-          <div class="list-item-amount ${Number(r.importo) < 0 ? 'neg' : ''}">${eur(r.importo)}</div>
+          <div class="list-item-amount">${eur(r.importo)}</div>
           <div class="list-item-sub">${fmtData(r.data_inserimento?.split('T')[0])}</div>
           ${userRole === 'proprietario' && r.tipo === 'fissa' && !r.confermata
             ? `<button onclick="confermaSp(${r.id})" style="margin-top:6px;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">Conferma</button>`
             : ''}
           ${userRole === 'proprietario'
-            ? `<button onclick="eliminaSpesa(${r.id})" style="margin-top:4px;background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;">Elimina</button>`
+            ? `<button onclick="eliminaSpesa(${r.id})" style="margin-top:4px;background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;display:block;">Elimina</button>`
             : ''}
         </div>
       </div>
     `).join('');
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--border);margin-top:2px;">
-      <span style="font-weight:600;color:var(--ink2);">Totale</span>
-      <span style="font-family:'DM Serif Display',serif;font-size:18px;">${eur(totale)}</span>
-    </div></div>`;
+    html += `<div class="totale-row"><span>Totale</span><span>${eur(totale)}</span></div>`;
+    html += `</div>`;
   }
 
   el.innerHTML = html;
 
-  // Pulsante aggiungi (solo proprietario)
   const actEl = document.getElementById('spese-actions');
-  if (userRole === 'proprietario') {
-    actEl.innerHTML = `<button class="btn-primary" onclick="apriModalSpesa()">+ Aggiungi Spesa</button>`;
-  } else {
-    actEl.innerHTML = '';
-  }
+  actEl.innerHTML = userRole === 'proprietario'
+    ? `<button class="btn-primary" onclick="apriModalSpesa()">+ Aggiungi Spesa</button>`
+    : '';
 }
 
 async function confermaSp(id) {
   const { error } = await db.from('spese').update({ confermata: true }).eq('id', id);
-  if (!error) { toast('Spesa confermata ✓'); renderSpese(); renderDashboard(); }
+  if (!error) { toast('Spesa confermata ✓'); renderSpese(); }
 }
 
 async function eliminaSpesa(id) {
@@ -939,54 +1184,60 @@ async function salvaSpesa() {
   const importo = document.getElementById('f-spesa-importo').value;
   const desc    = document.getElementById('f-spesa-desc').value;
   const note    = document.getElementById('f-spesa-note').value;
+  const file    = document.getElementById('f-spesa-file').files[0] || null;
 
   if (!mese || !importo) { toast('Compila mese e importo'); return; }
 
   const btn = document.getElementById('btn-save-spesa');
-  btn.disabled = true; btn.textContent = 'Salvo…';
+  btn.disabled = true; btn.textContent = file ? 'Carico file…' : 'Salvo…';
+
+  const allegatoUrl = file ? await uploadFile(file, 'spese') : null;
+  btn.textContent = 'Salvo…';
 
   const { error } = await db.from('spese').insert({
     mese, categoria: cat, importo: Number(importo),
-    descrizione: desc, note, tipo: 'variabile', confermata: true
+    descrizione: desc, note, tipo: 'variabile', confermata: true,
+    allegato_url: allegatoUrl
   });
 
   btn.disabled = false; btn.textContent = 'Salva';
-
   if (error) { toast('Errore nel salvataggio'); return; }
+
   toast('Spesa aggiunta ✓');
   closeModal('modal-spesa');
   document.getElementById('f-spesa-importo').value = '';
   document.getElementById('f-spesa-desc').value = '';
   document.getElementById('f-spesa-note').value = '';
+  rimuoviFile('spesa');
   renderSpese();
 }
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    PAGAMENTI
-══════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════ */
 async function renderPagamenti() {
   document.getElementById('pag-month-label').textContent = fmtMese(state.pagMese);
   const el = document.getElementById('pag-content');
   el.innerHTML = '<div class="spinner"></div>';
 
-  // Carica pagamenti del mese E saldo complessivo
   const [{ data: pags }, { data: speseAll }, { data: pagsAll }] = await Promise.all([
     db.from('pagamenti').select('*').eq('mese_riferimento', state.pagMese).order('data_pagamento'),
-    db.from('spese').select('mese,importo'),
-    db.from('pagamenti').select('mese_riferimento,importo_pagato'),
+    db.from('spese').select('importo'),
+    db.from('pagamenti').select('importo_pagato'),
   ]);
 
   const totSpeseTot = (speseAll||[]).reduce((s,r) => s + Number(r.importo), 0);
   const totPagTot   = (pagsAll||[]).reduce((s,r) => s + Number(r.importo_pagato), 0);
   const saldoTot    = totSpeseTot - totPagTot;
+  const isDebito    = saldoTot > 0;
 
   const totMese = (pags||[]).reduce((s,r) => s + Number(r.importo_pagato), 0);
 
   let html = `
-    <div class="card" style="background:var(--ink);color:#fff;margin-bottom:14px;">
-      <div class="kpi-label" style="color:rgba(255,255,255,.6);">Saldo Complessivo</div>
-      <div style="font-family:'DM Serif Display',serif;font-size:30px;">${eur(saldoTot)}</div>
-      <div style="font-size:12px;opacity:.6;margin-top:4px;">Totale spese ${eur(totSpeseTot)} · Totale pagato ${eur(totPagTot)}</div>
+    <div class="saldo-box ${isDebito ? 'debito' : 'credito'}" style="margin-bottom:14px;">
+      <div class="label">Saldo complessivo</div>
+      <div class="value">${isDebito ? '−' : '+'}${eur(Math.abs(saldoTot))}</div>
+      <div class="sub">Spese ${eur(totSpeseTot)} · Pagato ${eur(totPagTot)}</div>
     </div>`;
 
   if (!pags || pags.length === 0) {
@@ -997,31 +1248,27 @@ async function renderPagamenti() {
       <div class="list-item">
         <div class="list-item-left">
           <div class="list-item-title">Pagamento</div>
-          <div class="list-item-sub">${fmtData(r.data_pagamento)}${r.note ? ` · ${r.note}` : ''}</div>
+          <div class="list-item-sub">${fmtData(r.data_pagamento)}${r.note?` · ${r.note}`:''}</div>
+          ${r.allegato_url ? `<a href="${r.allegato_url}" target="_blank" class="allegato-link">📎 Vedi bonifico</a>` : ''}
         </div>
         <div class="list-item-right">
-          <div class="list-item-amount neg">${eur(r.importo_pagato)}</div>
+          <div class="list-item-amount pos">${eur(r.importo_pagato)}</div>
           ${userRole === 'inquilino'
             ? `<button onclick="eliminaPag(${r.id})" style="margin-top:4px;background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;">Elimina</button>`
             : ''}
         </div>
       </div>
     `).join('');
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--border);margin-top:2px;">
-      <span style="font-weight:600;color:var(--ink2);">Totale mese</span>
-      <span style="font-family:'DM Serif Display',serif;font-size:18px;">${eur(totMese)}</span>
-    </div></div>`;
+    html += `<div class="totale-row"><span>Totale mese</span><span>${eur(totMese)}</span></div>`;
+    html += `</div>`;
   }
 
   el.innerHTML = html;
 
-  // Pulsante (solo inquilino)
   const actEl = document.getElementById('pag-actions');
-  if (userRole === 'inquilino') {
-    actEl.innerHTML = `<button class="btn-primary" onclick="apriModalPag()">+ Registra Pagamento</button>`;
-  } else {
-    actEl.innerHTML = '';
-  }
+  actEl.innerHTML = userRole === 'inquilino'
+    ? `<button class="btn-primary" onclick="apriModalPag()">+ Registra Pagamento</button>`
+    : '';
 }
 
 function apriModalPag() {
@@ -1037,26 +1284,32 @@ async function salvaPagamento() {
   const importo = document.getElementById('f-pag-importo').value;
   const data    = document.getElementById('f-pag-data').value;
   const note    = document.getElementById('f-pag-note').value;
+  const file    = document.getElementById('f-pag-file').files[0] || null;
 
   if (!mese || !importo || !data) { toast('Compila tutti i campi obbligatori'); return; }
 
   const btn = document.getElementById('btn-save-pag');
-  btn.disabled = true; btn.textContent = 'Salvo…';
+  btn.disabled = true; btn.textContent = file ? 'Carico file…' : 'Salvo…';
+
+  const allegatoUrl = file ? await uploadFile(file, 'pagamenti') : null;
+  btn.textContent = 'Salvo…';
 
   const { error } = await db.from('pagamenti').insert({
     mese_riferimento: mese,
     importo_pagato: Number(importo),
     data_pagamento: data,
-    note
+    note,
+    allegato_url: allegatoUrl
   });
 
   btn.disabled = false; btn.textContent = 'Salva';
-
   if (error) { toast('Errore nel salvataggio'); return; }
+
   toast('Pagamento registrato ✓');
   closeModal('modal-pagamento');
   document.getElementById('f-pag-importo').value = '';
   document.getElementById('f-pag-note').value = '';
+  rimuoviFile('pag');
   renderPagamenti();
 }
 
@@ -1066,9 +1319,9 @@ async function eliminaPag(id) {
   if (!error) { toast('Pagamento eliminato'); renderPagamenti(); }
 }
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    GAS
-══════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════ */
 async function renderGas() {
   const el = document.getElementById('gas-content');
   el.innerHTML = '<div class="spinner"></div>';
@@ -1077,11 +1330,10 @@ async function renderGas() {
     .from('letture_gas').select('*')
     .order('data_lettura', { ascending: true });
 
-  if (error) { el.innerHTML = '<p style="color:red;text-align:center;">Errore caricamento dati.</p>'; return; }
+  if (error) { el.innerHTML = '<p style="color:red;text-align:center;">Errore caricamento.</p>'; return; }
 
   let html = '';
 
-  // Calcola consumo tra coppie di letture
   if (letture && letture.length >= 2) {
     html += `<div class="card" style="margin-bottom:14px;">
       <div class="section-title" style="font-size:16px;">Riepilogo Stagioni</div>`;
@@ -1094,7 +1346,7 @@ async function renderGas() {
         <div class="list-item">
           <div class="list-item-left">
             <div class="list-item-title">${fmtData(prec.data_lettura)} → ${fmtData(curr.data_lettura)}</div>
-            <div class="list-item-sub">Consumo: ${consumo.toLocaleString('it-IT')} Kcal · €/Kcal: ${Number(curr.costo_kcal).toFixed(4)}</div>
+            <div class="list-item-sub">Consumo: ${consumo.toLocaleString('it-IT')} Kcal · €${Number(curr.costo_kcal).toFixed(4)}/Kcal</div>
             ${curr.note ? `<div class="list-item-sub">${curr.note}</div>` : ''}
           </div>
           <div class="list-item-right">
@@ -1105,7 +1357,6 @@ async function renderGas() {
     html += `</div>`;
   }
 
-  // Tutte le letture
   html += `<div class="card">
     <div class="section-title" style="font-size:16px;">Storico Letture</div>`;
   if (!letture || letture.length === 0) {
@@ -1130,13 +1381,10 @@ async function renderGas() {
 
   el.innerHTML = html;
 
-  // Pulsante (solo proprietario)
   const actEl = document.getElementById('gas-actions');
-  if (userRole === 'proprietario') {
-    actEl.innerHTML = `<button class="btn-primary" onclick="openModal('modal-gas')">+ Inserisci Lettura</button>`;
-  } else {
-    actEl.innerHTML = '';
-  }
+  actEl.innerHTML = userRole === 'proprietario'
+    ? `<button class="btn-primary" onclick="openModal('modal-gas')">+ Inserisci Lettura</button>`
+    : '';
 }
 
 async function salvaGas() {
@@ -1151,15 +1399,13 @@ async function salvaGas() {
   btn.disabled = true; btn.textContent = 'Salvo…';
 
   const { error } = await db.from('letture_gas').insert({
-    data_lettura: data,
-    valore_kcal: parseInt(kcal),
-    costo_kcal: Number(costo),
-    note
+    data_lettura: data, valore_kcal: parseInt(kcal),
+    costo_kcal: Number(costo), note
   });
 
   btn.disabled = false; btn.textContent = 'Salva';
-
   if (error) { toast('Errore nel salvataggio'); return; }
+
   toast('Lettura salvata ✓');
   closeModal('modal-gas');
   document.getElementById('f-gas-kcal').value = '';
@@ -1172,6 +1418,115 @@ async function eliminaGas(id) {
   if (!confirm('Eliminare questa lettura?')) return;
   const { error } = await db.from('letture_gas').delete().eq('id', id);
   if (!error) { toast('Lettura eliminata'); renderGas(); }
+}
+
+/* ══════════════════════════════════════════════════
+   PROFILO
+══════════════════════════════════════════════════ */
+function renderProfilo() {
+  const el = document.getElementById('profilo-content');
+  const ruoloLabel = userRole === 'proprietario' ? 'Proprietario' : 'Inquilino';
+  const emoji = userRole === 'proprietario' ? '🏠' : '🔑';
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="profilo-avatar">${emoji}</div>
+      <div class="profilo-email">${currentUser?.email || '—'}</div>
+      <div class="profilo-ruolo">${ruoloLabel}</div>
+      <hr class="divider">
+      <button class="btn-primary" style="margin-top:0;" onclick="openModal('modal-password')">
+        🔒 Cambia password
+      </button>
+      <button class="btn-danger" onclick="eseguiLogout()">
+        Esci dall'app
+      </button>
+    </div>
+  `;
+}
+
+/* ══════════════════════════════════════════════════
+   CAMBIO PASSWORD
+══════════════════════════════════════════════════ */
+async function salvaPassword() {
+  const newPwd  = document.getElementById('f-pwd-new').value;
+  const confPwd = document.getElementById('f-pwd-confirm').value;
+  const errEl   = document.getElementById('pwd-error');
+
+  errEl.style.display = 'none';
+
+  if (newPwd.length < 8) {
+    errEl.textContent = 'La password deve essere di almeno 8 caratteri.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (newPwd !== confPwd) {
+    errEl.textContent = 'Le due password non coincidono.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('btn-save-pwd');
+  btn.disabled = true; btn.textContent = 'Salvo…';
+
+  const { error } = await db.auth.updateUser({ password: newPwd });
+
+  btn.disabled = false; btn.textContent = 'Salva';
+
+  if (error) {
+    errEl.textContent = 'Errore nel salvataggio. Riprova.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  toast('Password aggiornata ✓');
+  closeModal('modal-password');
+  document.getElementById('f-pwd-new').value = '';
+  document.getElementById('f-pwd-confirm').value = '';
+}
+
+/* ══════════════════════════════════════════════════
+   ALLEGATI — Upload e anteprima
+══════════════════════════════════════════════════ */
+function setupUploadPreview(inputId, previewId, previewImgId, previewNameId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (!file) return;
+    const preview     = document.getElementById(previewId);
+    const previewImg  = document.getElementById(previewImgId);
+    const previewName = document.getElementById(previewNameId);
+    previewName.textContent = file.name;
+    preview.style.display = 'block';
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => { previewImg.src = e.target.result; previewImg.style.display = 'block'; };
+      reader.readAsDataURL(file);
+    } else {
+      previewImg.style.display = 'none';
+    }
+  });
+}
+
+function rimuoviFile(tipo) {
+  const inputId   = tipo === 'spesa' ? 'f-spesa-file' : 'f-pag-file';
+  const previewId = tipo === 'spesa' ? 'preview-spesa' : 'preview-pag';
+  const imgId     = tipo === 'spesa' ? 'preview-spesa-img' : 'preview-pag-img';
+  document.getElementById(inputId).value = '';
+  document.getElementById(previewId).style.display = 'none';
+  document.getElementById(imgId).src = '';
+}
+
+async function uploadFile(file, cartella) {
+  if (!file) return null;
+  const ext  = file.name.split('.').pop();
+  const nome = `${cartella}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await db.storage
+    .from('allegati')
+    .upload(nome, file, { upsert: false });
+  if (error) { toast('Errore nel caricamento del file'); return null; }
+  const { data: urlData } = db.storage.from('allegati').getPublicUrl(nome);
+  return urlData.publicUrl;
 }
 </script>
 </body>
