@@ -744,8 +744,9 @@ let userRole    = null; // 'proprietario' | 'inquilino'
 
 const today = new Date();
 const state = {
-  speseMese: `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`,
-  pagMese:   `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`,
+  speseMese:  `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`,
+  pagMese:    `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`,
+  dashOffset: 0, // 0 = ultimi 6 mesi, -6 = 6 mesi fa, +6 non usato
 };
 
 /* ══════════════════════════════════════════════════
@@ -943,37 +944,40 @@ async function renderDashboard() {
   const totSpeseGlobale = (tutteSpese||[]).reduce((s,r) => s + Number(r.importo), 0);
   const totPagGlobale   = (tuttiPagamenti||[]).reduce((s,r) => s + Number(r.importo_pagato), 0);
   const residuoGlobale  = totSpeseGlobale - totPagGlobale;
-  // residuo > 0 → inquilino deve ancora pagare (debito) → ROSSO
-  // residuo < 0 → inquilino ha pagato più del dovuto (credito) → VERDE
   const isDebito = residuoGlobale > 0;
 
-  // Ultimi 6 mesi
-  const mesi6 = [];
+  // Finestra di 6 mesi basata sull'offset
+  // offset 0 = mese corrente come ultimo, -6 = 6 mesi fa come ultimo, ecc.
   const meseCorrente = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-  for (let i = 5; i >= 0; i--) mesi6.push(spostaM(meseCorrente, -i));
+  const meseFine = spostaM(meseCorrente, state.dashOffset);
+  const mesi6 = [];
+  for (let i = 5; i >= 0; i--) mesi6.push(spostaM(meseFine, -i));
 
   const [{ data: spese6 }, { data: pag6 }] = await Promise.all([
     db.from('spese').select('mese,importo,allegato_url').in('mese', mesi6),
     db.from('pagamenti').select('mese_riferimento,importo_pagato,allegato_url').in('mese_riferimento', mesi6),
   ]);
 
-  // Costruisce i dati per ogni mese
   const datiMesi = mesi6.map(m => {
-    const speseMese = (spese6||[]).filter(r => r.mese === m);
-    const pagMese   = (pag6||[]).filter(r => r.mese_riferimento === m);
-    const totSpese  = speseMese.reduce((a,r) => a + Number(r.importo), 0);
-    const totPag    = pagMese.reduce((a,r) => a + Number(r.importo_pagato), 0);
+    const speseMese   = (spese6||[]).filter(r => r.mese === m);
+    const pagMese     = (pag6||[]).filter(r => r.mese_riferimento === m);
+    const totSpese    = speseMese.reduce((a,r) => a + Number(r.importo), 0);
+    const totPag      = pagMese.reduce((a,r) => a + Number(r.importo_pagato), 0);
     const hasAllegati = speseMese.some(r => r.allegato_url) || pagMese.some(r => r.allegato_url);
     return { mese: m, totSpese, totPag, saldo: totSpese - totPag, hasAllegati };
   });
 
-  // Segno e testo del residuo
-  const segno = isDebito ? '−' : '+';
+  const segno      = isDebito ? '−' : '+';
   const classeSaldo = isDebito ? 'debito' : 'credito';
   const labelSaldo  = isDebito ? 'Residuo da pagare' : 'In anticipo';
 
+  // Etichetta periodo visualizzato
+  const periodoLabel = `${fmtMeseBreve(mesi6[0])} — ${fmtMeseBreve(mesi6[5])}`;
+
+  // Il pulsante "avanti" è disabilitato se siamo già al periodo corrente
+  const avatiDisabilitato = state.dashOffset >= 0;
+
   let html = `
-    <!-- KPI globali -->
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-label">Spese totali</div>
@@ -991,11 +995,16 @@ async function renderDashboard() {
       <div class="sub">Dall'inizio del tracciamento</div>
     </div>
 
-    <!-- Griglia ultimi 6 mesi -->
-    <div style="font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:12px;color:var(--ink);">Ultimi 6 mesi</div>
+    <!-- Navigazione griglia mesi -->
+    <div class="month-nav" style="margin-bottom:12px;">
+      <button onclick="spostaDash(-6)">&#8592;</button>
+      <div class="month-nav-label" style="font-size:14px;">${periodoLabel}</div>
+      <button onclick="spostaDash(+6)" ${avatiDisabilitato ? 'disabled style="opacity:.3;cursor:default;"' : ''}>&#8594;</button>
+    </div>
+
     <div class="mesi-grid">
       ${datiMesi.map(d => {
-        const saldoMese = d.saldo;
+        const saldoMese  = d.saldo;
         const classeMese = saldoMese > 0 ? 'nok' : 'ok';
         const saldoLabel = saldoMese > 0 ? `−${eur(saldoMese)}` : saldoMese < 0 ? `+${eur(Math.abs(saldoMese))}` : 'In pari';
         return `
@@ -1015,6 +1024,14 @@ async function renderDashboard() {
   `;
 
   el.innerHTML = html;
+}
+
+// Sposta la finestra della dashboard di 6 mesi avanti o indietro
+function spostaDash(delta) {
+  // Non permettere di andare oltre il mese corrente
+  if (delta > 0 && state.dashOffset >= 0) return;
+  state.dashOffset += delta;
+  renderDashboard();
 }
 
 /* ══════════════════════════════════════════════════
